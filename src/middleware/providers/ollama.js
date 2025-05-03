@@ -1,11 +1,51 @@
 // src/middleware/providers/ollama.js
-//
+
+// - Test Ollama or LM Studio model importing
+// - 
+
 // Minimal wrapper for Ollama’s REST API (/api/chat).
 // Converts OpenAI-style options ⇄ Ollama format and vice-versa.
 
 import fetch from 'node-fetch';                    // Node ≤18 — comment out if global fetch exists.
 
-/* ───────────────────────── Adapt helpers ───────────────────────── */
+// ollama model selector
+fetchOllamaModels();
+
+/* ───────────────────────── Fetch Models ───────────────────────── */
+
+async function fetchOllamaModels() {
+    let count = 0;
+    let ollamaModels = [];
+    const base =  'http://localhost:11434';
+    const url = `${base}/api/tags`;
+    console.log("url = ", url);
+    return fetch(url, { method: 'GET' })
+    .then(res => res.json())
+    .then(data => {
+        if (Array.isArray(data.models)) {
+            while (data.models.length > count) { 
+                ollamaModels[count] = data.models[count].name.split(":")[0]+"("+data.models[count].name.split(":")[1]+")";
+                // console.log(ollamaModels[count]);
+                count++;
+            }
+            console.log("Found", data.models.length, "Ollama models.");
+            return ollamaModels;
+        }
+    })
+    .catch(error => {
+        console.error('Failed to fetch models:', error);
+        throw error;
+    });
+}
+
+/* ────────────────────────── UI templates ──────────────────────── */
+
+
+// model selection template
+// ...
+
+
+/* ───────────────────────── API proxy ──────────────────────────── */
 function openaiToOllamaMessages(messages = []) {
     return messages.map(m => {
         // Convert OpenAI image-array format to Ollama’s { content, images }
@@ -95,7 +135,7 @@ function processResponse(raw) {
     };
 }
 
-/* ───────────────────────── Provider ───────────────────────── */
+/* ───────────────────────── Ollama as Provider ───────────────────────── */
 export default {
     name: 'ollama',
     settings: ['apiKey', 'apiUrl'],
